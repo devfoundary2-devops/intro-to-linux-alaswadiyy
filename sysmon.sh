@@ -1,13 +1,24 @@
 #!/bin/env bash
 
+LOGFILE="/var/log/sysmon.log"
+
 while true; do
-  echo "--- $(date) ---" >> /var/log/sysmon.log
-  echo "CPU: $(uptime)" >> /var/log/sysmon.log
-  echo "MEMORY:" >> /var/log/sysmon.log
-  free -h >> /var/log/sysmon.log
-  echo "DISK:" >> /var/log/sysmon.log
-  df -h / >> /var/log/sysmon.log
-  echo "NET:" >> /var/log/sysmon.log
-  ip link | grep eth0 >> /var/log/sysmon.log
+  echo "--- $(date) ---" >> "$LOGFILE"
+
+  echo "CPU:" >> "$LOGFILE"
+  mpstat 1 1 | awk '/Average:/ && $12 ~ /[0-9.]+/ {print 100 - $12"%"}' >> "$LOGFILE"
+
+  echo "MEMORY:" >> "$LOGFILE"
+  free -h >> "$LOGFILE"
+
+  echo "DISK:" >> "$LOGFILE"
+  df -h / >> "$LOGFILE"
+
+  echo "NET:" >> "$LOGFILE"
+  ip -o link show 2>/dev/null | grep eth0 | head -1 >> "$LOGFILE"
+
+  echo "" >> "$LOGFILE"
+  
   sleep 300
+
 done
